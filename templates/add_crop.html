@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Add Crop</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f5f5f5;
+            text-align: center;
+        }
+
+        form {
+            background: white;
+            padding: 25px;
+            margin: auto;
+            width: 300px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px gray;
+        }
+
+        input {
+            width: 90%;
+            padding: 8px;
+            margin-top: 5px;
+        }
+
+        button {
+            background: green;
+            color: white;
+            padding: 10px;
+            border: none;
+            margin-top: 15px;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: darkgreen;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🌾 Add Crop</h1>
+
+    <form method="POST" enctype="multipart/form-data">
+
+        <label>Crop Name:</label><br>
+        <input type="text" name="name" required><br><br>
+
+        <label>Price (₹):</label><br>
+        <input type="number" name="price" required><br><br>
+
+        <label>Quantity (kg):</label><br>
+        <input type="number" name="quantity" required><br><br>
+
+        <label>Upload Image:</label><br>
+        <input type="file" name="image"><br><br>
+
+        <button type="submit">Add Crop</button>
+
+    </form>
+
+</body>
+
+</html>

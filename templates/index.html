@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Farm Connect</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f5f5f5;
+            text-align: center;
+            padding: 50px 10px;
+        }
+
+        .box {
+            background: white;
+            padding: 30px;
+            max-width: 400px;
+            margin: auto;
+            border-radius: 10px;
+            box-shadow: 0 0 10px gray;
+        }
+
+        h1 {
+            color: #2e7d32;
+            font-size: 26px;
+            white-space: nowrap;
+            /* ✅ always one line */
+        }
+
+        p {
+            font-size: 15px;
+            white-space: nowrap;
+            /* ✅ keep in one line */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            /* optional safety */
+        }
+
+        button {
+            width: 90%;
+            padding: 10px;
+            margin-top: 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .register {
+            background: green;
+            color: white;
+        }
+
+        .login {
+            background: #1565c0;
+            color: white;
+        }
+
+        /* 📱 Mobile fix */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 18px;
+                /* smaller so fits in one line */
+            }
+
+            p {
+                font-size: 12px;
+                /* smaller text */
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="box">
+
+        <h1>🌾 Welcome to Farm Connect</h1>
+
+        <p>This platform connects farmers directly with consumers.</p>
+
+        <a href="/register">
+            <button class="register">➕ Register</button>
+        </a>
+
+        <a href="/login">
+            <button class="login">🔐 Login</button>
+        </a>
+
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Login - Farm Connect</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f5f5f5;
+            text-align: center;
+        }
+
+        .container {
+            margin-top: 60px;
+        }
+
+        form {
+            background: white;
+            padding: 25px;
+            margin: auto;
+            width: 300px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px gray;
+        }
+
+        input {
+            width: 90%;
+            padding: 8px;
+            margin-top: 5px;
+        }
+
+        button {
+            background: #2e7d32;
+            color: white;
+            padding: 10px;
+            border: none;
+            margin-top: 15px;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1b5e20;
+        }
+
+        .link {
+            margin-top: 15px;
+        }
+
+        .link a {
+            text-decoration: none;
+            color: #1565c0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>🌾 Login to Farm Connect</h1>
+
+        <form method="POST">
+
+            <label>Email:</label><br>
+            <input type="email" name="email" placeholder="your@email.com"
+                pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                title="Enter valid email (example: your@email.com)" required>
+            <br><br>
+
+            <label>Password:</label><br>
+            <input type="password" name="password" placeholder="Enter password" required>
+            <br><br>
+
+            <button type="submit">Login</button>
+
+        </form>
+
+        <div class="link">
+            <p>Don't have an account? <a href="/register">Register here</a></p>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

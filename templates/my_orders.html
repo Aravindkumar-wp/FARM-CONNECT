@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>My Orders</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f5f5f5;
+            text-align: center;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            width: 220px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .card img {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .total {
+            margin-top: 30px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <h1>📦 My Orders</h1>
+
+    <a href="/market">⬅ Back</a>
+
+    <hr>
+
+    <div class="container">
+
+        {% if orders|length == 0 %}
+        <h2>📦 No orders yet</h2>
+        {% else %}
+
+        {% for order in orders %}
+        <div class="card">
+
+            {% if order[2] %}
+            <img src="{{ url_for('static', filename='uploads/' + order[2]) }}">
+            {% endif %}
+
+            <h3>{{ order[0] }}</h3>
+
+            <p>💰 Price: ₹{{ order[1] }} / kg</p>
+            <p>📦 Quantity: {{ order[3] }} kg</p>
+            <p>🧾 Subtotal: ₹{{ order[4] }}</p>
+            <p style="color:green;">💳 {{ order[5] }}</p>
+
+            <!-- ✅ TRACKING -->
+            <h4>📦 Order Tracking</h4>
+
+            {% set status = order[8] %}
+
+            <div style="display:flex; justify-content:space-between; margin:10px 0;">
+
+                <!-- Pending -->
+                <div>
+                    {% if status == 'Pending' %}
+                    <span style="color:red;">🔴</span>
+                    {% else %}
+                    <span style="color:gray;">⚪</span>
+                    {% endif %}
+                    <br>Pending
+                </div>
+
+                <!-- Processing -->
+                <div>
+                    {% if status == 'Processing' %}
+                    <span style="color:orange;">🟡</span>
+                    {% else %}
+                    <span style="color:gray;">⚪</span>
+                    {% endif %}
+                    <br>Processing
+                </div>
+
+                <!-- Delivered -->
+                <div>
+                    {% if status == 'Delivered' %}
+                    <span style="color:green;">🟢</span>
+                    {% else %}
+                    <span style="color:gray;">⚪</span>
+                    {% endif %}
+                    <br>Delivered
+                </div>
+
+            </div>
+
+            <!-- ✅ PROGRESS BAR (FIXED INSIDE CARD) -->
+            <div style="height:6px; background:#ddd; border-radius:10px; margin-top:10px;">
+
+                <div style="
+                    height:6px;
+                    border-radius:10px;
+                    background:
+                    {% if status == 'Pending' %} red
+                    {% elif status == 'Processing' %} orange
+                    {% else %} green
+                    {% endif %};
+                    
+                    width:
+                    {% if status == 'Pending' %} 33%
+                    {% elif status == 'Processing' %} 66%
+                    {% else %} 100%
+                    {% endif %};
+                ">
+                </div>
+
+            </div>
+
+            <p>
+                📦 Status:
+                {% if order[8] == 'Pending' %}
+                <span style="color:red;">🔴 Pending</span>
+
+                {% elif order[8] == 'Processing' %}
+                <span style="color:orange;">🟡 Processing</span>
+
+                {% elif order[8] == 'Delivered' %}
+                <span style="color:green;">🟢 Delivered</span>
+
+                {% else %}
+                <span style="color:gray;">⚪ Unknown</span>
+                {% endif %}
+            </p>
+        </div>
+
+
+        {% endfor %}
+
+        {% endif %}
+
+    </div>
+
+    <div class="total">
+        Total Amount: ₹{{ total }}
+    </div>
+
+</body>
+
+</html>

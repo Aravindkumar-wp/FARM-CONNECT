@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Update Crop</title>
+</head>
+
+<body>
+
+    <h2>Update Crop</h2>
+
+    <form method="POST">
+
+        Crop Name:<br>
+        <input type="text" value="{{ crop[1] }}" disabled>
+        <br><br>
+
+        Price:<br>
+        <input type="number" name="price" value="{{ crop[2] }}" required>
+        <br><br>
+
+        Quantity:<br>
+        <input type="number" name="quantity" value="{{ crop[3] }}" required>
+        <br><br>
+
+        <button type="submit">Update Crop</button>
+
+    </form>
+
+    <br>
+    <a href="/market">Back to Market</a>
+
+</body>
+
+</html>

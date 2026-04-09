@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Farm Connect Market</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f5f5f5;
+            margin: 0;
+        }
+
+        .header {
+            background: #2e7d32;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header a {
+            color: white;
+            margin-left: 15px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .search {
+            margin-bottom: 20px;
+        }
+
+        .cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            width: 230px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            transition: 0.2s;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+        }
+
+        .card img {
+            width: 160px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        button {
+            background: #2e7d32;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1b5e20;
+        }
+
+        .action-links a {
+            text-decoration: none;
+            margin: 5px;
+            color: #1565c0;
+        }
+
+        .notfound {
+            color: red;
+            font-size: 20px;
+            margin-top: 20px;
+        }
+
+        .qty-input {
+            width: 70px;
+            padding: 6px;
+            margin-top: 8px;
+            text-align: center;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <!-- ✅ SINGLE CLEAN HEADER -->
+    <div class="header">
+        <h2>🌾 Farm Connect</h2>
+
+        <div>
+            Welcome {{ session.get('user') }}
+
+            {% if session.get('role') == 'customer' %}
+            | <a href="/orders">🛒 My Cart</a>
+            | <a href="/my_orders">📦 My Orders</a>
+            {% endif %}
+
+            {% if session.get('role') == 'farmer' %}
+            | <a href="/dashboard">📊 Dashboard</a>
+            | <a href="/farmer_orders">📦 Orders Received</a>
+            {% endif %}
+
+            | <a href="/logout">Logout</a>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <div class="search">
+            <form method="GET" action="/market">
+                <input type="text" name="search" placeholder="Search crops..." style="padding:8px;width:200px;">
+                <button type="submit">Search</button>
+            </form>
+        </div>
+
+        {% if session.get('role') == 'farmer' %}
+        <a href="/add_crop"><button>➕ Add Crop</button></a>
+        {% endif %}
+
+        <hr>
+
+        {% if crops|length == 0 %}
+        <p class="notfound">❌ Product not available</p>
+        {% endif %}
+
+        <div class="cards">
+
+            {% for crop in crops %}
+
+            <div class="card">
+
+                {% if crop[4] %}
+                <img src="{{ url_for('static', filename='uploads/' + crop[4]) }}">
+                {% else %}
+                <p>No Image</p>
+                {% endif %}
+
+                <h3>{{ crop[1] }}</h3>
+
+                <p>💰 Price: ₹{{ crop[2] }} / kg</p>
+
+                <p>📦 Available: {{ crop[3] }} kg</p>
+
+                <p>👨‍🌾 Farmer: {{ crop[5] }}</p>
+
+                <p>📞 Phone: {{ crop[6] }}</p>
+
+                <p>📍 Location: {{ crop[7] }}</p>
+
+                {% if crop[3] > 0 %}
+
+                {% if session.get('role') == 'customer' %}
+                <form action="/buy/{{ crop[0] }}" method="POST">
+                    <input type="number" name="qty" class="qty-input" min="1" max="{{ crop[3] }}" placeholder="kg"
+                        required>
+                    <br><br>
+                    <button type="submit">🛒 Buy</button>
+                </form>
+                {% endif %}
+
+                {% else %}
+                <p style="color:red;">Out of Stock</p>
+                {% endif %}
+
+                {% if session.get('role') == 'farmer' and crop[5] == session.get('user') %}
+                <div class="action-links">
+                    <a href="/update/{{ crop[0] }}">✏ Update</a> |
+                    <a href="/delete/{{ crop[0] }}" onclick="return confirm('Are you sure to delete this crop?');">🗑
+                        Delete</a>
+                </div>
+                {% endif %}
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>
