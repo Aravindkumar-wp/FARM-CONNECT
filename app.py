@@ -632,6 +632,10 @@ def cancel_order(crop):
     conn.close()
 
     return redirect("/orders")
+#home page
+@app.route("/")
+def home():
+    return render_template("index.html")
 # ---------------- RUN ----------------
 import os
 
