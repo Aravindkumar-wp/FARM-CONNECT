@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session,flash
+from flask import Flask, render_template, request, redirect, session,flash,jsonify
 import sqlite3
 import os
 
@@ -636,6 +636,12 @@ def cancel_order(crop):
 @app.route("/")
 def home():
     return render_template("index.html")
+
+#new api
+from flask import jsonify
+@app.route("/api/test")
+def test_api():
+    return jsonify({"message": "API working"})
 # ---------------- RUN ----------------
 import os
 
