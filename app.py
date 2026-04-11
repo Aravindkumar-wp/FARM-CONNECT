@@ -133,10 +133,20 @@ def login():
 @app.route("/api/login", methods=["GET","POST"])
 def api_login():
 
-    data = request.get_json()
+    # ✅ If GET → take from URL
+    if request.method == "GET":
+        email = request.args.get("email")
+        password = request.args.get("password")
 
-    email = data.get("email")
-    password = data.get("password")
+    # ✅ If POST → take JSON
+    else:
+        data = request.get_json(silent=True) or {}
+        email = data.get("email")
+        password = data.get("password")
+
+    # ❗ check missing input
+    if not email or not password:
+        return jsonify({"status": "error", "message": "Email & Password required"})
 
     conn = sqlite3.connect("farmer.db")
     cur = conn.cursor()
