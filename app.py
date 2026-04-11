@@ -129,6 +129,37 @@ def login():
         return "Invalid Email or Password"
 
     return render_template("login.html")
+# ---------------- API FOR LOGIN ----------------
+@app.route("/api/login", methods=["POST"])
+def api_login():
+
+    data = request.get_json()
+
+    email = data.get("email")
+    password = data.get("password")
+
+    conn = sqlite3.connect("farmer.db")
+    cur = conn.cursor()
+
+    cur.execute(
+        "SELECT name, role FROM users WHERE email=? AND password=?",
+        (email, password)
+    )
+
+    user = cur.fetchone()
+    conn.close()
+
+    if user:
+        return jsonify({
+            "status": "success",
+            "user": user[0],
+            "role": user[1]
+        })
+    else:
+        return jsonify({
+            "status": "error",
+            "message": "Invalid credentials"
+        })
 
 # ---------------- LOGOUT ----------------
 from flask import flash   # make sure this is imported
