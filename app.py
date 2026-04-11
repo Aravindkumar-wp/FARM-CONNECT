@@ -101,6 +101,45 @@ def register():
 
     return render_template("register.html")
 
+# ---------------- API FOR REGISTER ----------------
+@app.route("/api/register", methods=["GET","POST"])
+def api_register():
+
+    data = request.get_json(silent=True) or {}
+
+    name = data.get("name")
+    email = data.get("email")
+    password = data.get("password")
+    role = data.get("role")
+    phone = data.get("phone")
+    location = data.get("location")
+
+    # ❗ check required fields
+    if not name or not email or not password or not role:
+        return jsonify({"status": "error", "message": "Missing fields"})
+
+    conn = sqlite3.connect("farmer.db")
+    cur = conn.cursor()
+
+    # check existing user
+    cur.execute("SELECT * FROM users WHERE email=?", (email,))
+    user = cur.fetchone()
+
+    if user:
+        conn.close()
+        return jsonify({"status": "error", "message": "User already exists"})
+
+    # insert user
+    cur.execute("""
+        INSERT INTO users(name,email,password,role,phone,location)
+        VALUES(?,?,?,?,?,?)
+    """, (name,email,password,role,phone,location))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({"status": "success", "message": "User registered"})
+
 # ---------------- LOGIN ----------------
 @app.route("/login", methods=["GET","POST"])
 def login():
