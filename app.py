@@ -105,23 +105,40 @@ def register():
 @app.route("/api/register", methods=["GET","POST"])
 def api_register():
 
-    data = request.get_json(silent=True) or {}
+    if request.method == "GET":
+        name = request.args.get("name", "").strip()
+        email = request.args.get("email", "").strip()
+        password = request.args.get("password", "").strip()
+        role = request.args.get("role", "").strip()
+        phone = request.args.get("phone", "").strip()
+        location = request.args.get("location", "").strip()
+    else:
+        data = request.get_json(silent=True) or {}
+        name = (data.get("name") or "").strip()
+        email = (data.get("email") or "").strip()
+        password = (data.get("password") or "").strip()
+        role = (data.get("role") or "").strip()
+        phone = (data.get("phone") or "").strip()
+        location = (data.get("location") or "").strip()
 
-    name = data.get("name")
-    email = data.get("email")
-    password = data.get("password")
-    role = data.get("role")
-    phone = data.get("phone")
-    location = data.get("location")
+    # ✅ Debug print (very important)
+    print(name, email, password, role)
 
-    # ❗ check required fields
     if not name or not email or not password or not role:
-        return jsonify({"status": "error", "message": "Missing fields"})
+        return jsonify({
+            "status": "error",
+            "message": "Missing fields",
+            "debug": {
+                "name": name,
+                "email": email,
+                "password": password,
+                "role": role
+            }
+        })
 
     conn = sqlite3.connect("farmer.db")
     cur = conn.cursor()
 
-    # check existing user
     cur.execute("SELECT * FROM users WHERE email=?", (email,))
     user = cur.fetchone()
 
@@ -129,7 +146,6 @@ def api_register():
         conn.close()
         return jsonify({"status": "error", "message": "User already exists"})
 
-    # insert user
     cur.execute("""
         INSERT INTO users(name,email,password,role,phone,location)
         VALUES(?,?,?,?,?,?)
@@ -139,7 +155,6 @@ def api_register():
     conn.close()
 
     return jsonify({"status": "success", "message": "User registered"})
-
 # ---------------- LOGIN ----------------
 @app.route("/login", methods=["GET","POST"])
 def login():
