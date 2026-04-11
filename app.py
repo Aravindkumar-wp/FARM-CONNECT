@@ -347,6 +347,40 @@ def orders():
         order_list.append((crop, price, image, qty, subtotal, payment, phone, location, order_status))
 
     return render_template("orders.html", orders=order_list, total=total)
+
+# ---------------- API FOR ORDERS ----------------
+@app.route("/api/orders")
+def api_orders():
+
+    if "user" not in session:
+        return jsonify({"error": "Not logged in"})
+
+    conn = sqlite3.connect("farmer.db")
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT crop, price, quantity, payment, phone, location, order_status
+        FROM orders
+        WHERE user=? AND status='cart'
+    """, (session["user"],))
+
+    orders = cur.fetchall()
+    conn.close()
+
+    result = []
+
+    for o in orders:
+        result.append({
+            "crop": o[0],
+            "price": o[1],
+            "quantity": o[2],
+            "payment": o[3],
+            "phone": o[4],
+            "location": o[5],
+            "status": o[6]
+        })
+
+    return jsonify(result)
 #----------------- MY ORDERS (FARMER) ----------------
 @app.route("/my_orders")
 def my_orders():
@@ -634,7 +668,6 @@ def home():
     return render_template("index.html")
 
 #new api
-from flask import jsonify
 @app.route("/api/test")
 def test_api():
     return jsonify({"message": "API working"})
