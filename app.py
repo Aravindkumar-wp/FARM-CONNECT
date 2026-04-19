@@ -970,6 +970,48 @@ def cancel_order(crop):
     conn.close()
 
     return redirect("/orders")
+# ---------------- API FOR CANCEL ORDER ----------------
+@app.route("/api/cancel_order", methods=["POST"])
+def api_cancel_order():
+    data = request.get_json()
+    user = data.get("user")
+    crop = data.get("crop")
+
+    conn = sqlite3.connect("farmer.db")
+    cur = conn.cursor()
+
+    # get quantity
+    cur.execute("""
+        SELECT quantity FROM orders 
+        WHERE user=? AND crop=? AND status='cart'
+    """, (user, crop))
+
+    order = cur.fetchone()
+
+    if order:
+        qty = order[0]
+
+        # restore stock
+        cur.execute("""
+            UPDATE crops 
+            SET quantity = quantity + ? 
+            WHERE name=?
+        """, (qty, crop))
+
+        # delete order
+        cur.execute("""
+            DELETE FROM orders 
+            WHERE user=? AND crop=? AND status='cart'
+        """, (user, crop))
+
+        conn.commit()
+
+    conn.close()
+
+    return jsonify({
+        "status": "success",
+        "message": "Order cancelled ❌"
+    })
 #home page
 @app.route("/")
 def home():
