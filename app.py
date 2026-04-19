@@ -447,18 +447,16 @@ def buy(id):
 
 @app.route("/api/buy", methods=["POST"])
 def api_buy():
-    data = request.get_json(silent=True) or {}
+    data = request.get_json()
 
     crop_id = data.get("id")
     qty = int(data.get("qty", 0))
     user = data.get("user")
 
-    if not crop_id or not qty or not user:
-        return jsonify({"status": "error", "message": "Missing data"})
-
     conn = sqlite3.connect("farmer.db")
     cur = conn.cursor()
 
+    # 🔍 Get crop details
     cur.execute("SELECT name,price,quantity,image,farmer FROM crops WHERE id=?", (crop_id,))
     crop = cur.fetchone()
 
@@ -470,8 +468,17 @@ def api_buy():
     if available < qty:
         return jsonify({"status": "error", "message": "Not enough stock"})
 
+    # 🔽 reduce stock
     cur.execute("UPDATE crops SET quantity=? WHERE id=?", (available - qty, crop_id))
 
+    # 🔍 GET USER PHONE + LOCATION 🔥🔥🔥
+    cur.execute("SELECT phone, location FROM users WHERE name=?", (user,))
+    user_data = cur.fetchone()
+
+    phone = user_data[0] if user_data else ""
+    location = user_data[1] if user_data else ""
+
+    # 🔍 check existing cart
     cur.execute("""
         SELECT quantity FROM orders 
         WHERE user=? AND crop=? AND farmer=? AND status='cart'
@@ -486,18 +493,22 @@ def api_buy():
             WHERE user=? AND crop=? AND farmer=? AND status='cart'
         """, (new_qty, user, name, farmer))
     else:
+        # ✅ FIXED INSERT
         cur.execute("""
-            INSERT INTO orders(user,crop,price,image,quantity,payment,farmer,status,order_status)
-            VALUES(?,?,?,?,?,?,?,?,?)
-        """, (user, name, price, image, qty, "Cash on Delivery", farmer, "cart", "Pending"))
+            INSERT INTO orders(user,crop,price,image,quantity,payment,farmer,status,phone,location,order_status)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?)
+        """, (
+            user, name, price, image, qty,
+            "Cash on Delivery", farmer,
+            "cart",
+            phone, location,   # 🔥 FIX HERE
+            "Pending"
+        ))
 
     conn.commit()
     conn.close()
 
-    return jsonify({"status": "success", "message": "Added to cart ✅"})
-
-
-from flask import request, jsonify
+    return jsonify({"status": "success", "message": "Added to cart"})
 # ---------------- API FOR GET CART ----------------
 
 @app.route("/api/cart", methods=["POST"])
