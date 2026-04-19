@@ -166,13 +166,15 @@ def login():
     return render_template("login.html")
 
 # ---------------- LOGIN API ----------------
-@app.route("/api/login", methods=["GET", "POST"])
+@app.route("/api/login", methods=["POST"])
 def api_login():
 
-    data = request.get_json(silent=True)
+    data = request.get_json()
+
+    print("DATA RECEIVED:", data)
 
     if not data:
-        return jsonify({"status": "error", "message": "No data"})
+        return jsonify({"status": "error", "message": "No JSON received"})
 
     email = data.get("email")
     password = data.get("password")
@@ -201,7 +203,6 @@ def api_login():
         })
 
     return jsonify({"status": "error", "message": "Invalid login"})
-
 # ---------------- LOGOUT ----------------
 from flask import flash   # make sure this is imported
 
