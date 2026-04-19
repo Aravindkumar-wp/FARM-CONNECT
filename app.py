@@ -567,12 +567,11 @@ def orders():
 # ---------------- API FOR ORDERS ----------------
 @app.route("/api/orders", methods=["POST"])
 def api_orders():
-
     data = request.get_json()
     user = data.get("user")
 
     if not user:
-        return jsonify({"error": "User required"})
+        return jsonify({"status": "error", "message": "User required"})
 
     conn = sqlite3.connect("farmer.db")
     cur = conn.cursor()
@@ -580,7 +579,7 @@ def api_orders():
     cur.execute("""
         SELECT crop, price, quantity, payment, phone, location, order_status
         FROM orders
-        WHERE user=? AND status='placed'
+        WHERE user=? AND status='cart'
     """, (user,))
 
     rows = cur.fetchall()
