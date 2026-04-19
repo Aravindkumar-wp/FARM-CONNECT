@@ -756,6 +756,35 @@ def place_order():
     flash("✅ Order placed successfully!")
 
     return redirect("/orders")
+# ---------------- API FOR PLACE ORDER ----------------
+@app.route("/api/place_order", methods=["POST"])
+def api_place_order():
+    data = request.get_json()
+    user = data.get("user")
+
+    if not user:
+        return jsonify({
+            "status": "error",
+            "message": "User required"
+        })
+
+    conn = sqlite3.connect("farmer.db")
+    cur = conn.cursor()
+
+    # 🔁 move cart → placed
+    cur.execute("""
+        UPDATE orders
+        SET status='placed'
+        WHERE user=? AND status='cart'
+    """, (user,))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "status": "success",
+        "message": "Order placed successfully ✅"
+    })
 #farmers orders
 @app.route("/farmer_orders")
 def farmer_orders():
