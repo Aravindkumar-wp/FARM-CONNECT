@@ -55,6 +55,8 @@ def init_db():
         quantity INTEGER,
         payment TEXT,
         status TEXT,
+        phone TEXT,
+        location TEXT,
         order_status TEXT DEFAULT 'Pending'
 
     )
@@ -102,49 +104,28 @@ def register():
     return render_template("register.html")
 
 # ---------------- API FOR REGISTER ----------------
-@app.route("/api/register", methods=["GET","POST"])
+@app.route("/api/register", methods=["POST"])
 def api_register():
 
-    if request.method == "GET":
-        name = request.args.get("name", "").strip()
-        email = request.args.get("email", "").strip()
-        password = request.args.get("password", "").strip()
-        role = request.args.get("role", "").strip()
-        phone = request.args.get("phone", "").strip()
-        location = request.args.get("location", "").strip()
-    else:
-        data = request.get_json(silent=True) or {}
-        name = (data.get("name") or "").strip()
-        email = (data.get("email") or "").strip()
-        password = (data.get("password") or "").strip()
-        role = (data.get("role") or "").strip()
-        phone = (data.get("phone") or "").strip()
-        location = (data.get("location") or "").strip()
+    data = request.get_json()
 
-    # ✅ Debug print (very important)
-    print(name, email, password, role)
+    name = data.get("name")
+    email = data.get("email")
+    password = data.get("password")
+    role = data.get("role")
+    phone = data.get("phone")
+    location = data.get("location")
 
     if not name or not email or not password or not role:
-        return jsonify({
-            "status": "error",
-            "message": "Missing fields",
-            "debug": {
-                "name": name,
-                "email": email,
-                "password": password,
-                "role": role
-            }
-        })
+        return jsonify({"status": "error", "message": "Missing fields"})
 
     conn = sqlite3.connect("farmer.db")
     cur = conn.cursor()
 
     cur.execute("SELECT * FROM users WHERE email=?", (email,))
-    user = cur.fetchone()
-
-    if user:
+    if cur.fetchone():
         conn.close()
-        return jsonify({"status": "error", "message": "User already exists"})
+        return jsonify({"status": "error", "message": "User exists"})
 
     cur.execute("""
         INSERT INTO users(name,email,password,role,phone,location)
@@ -154,7 +135,7 @@ def api_register():
     conn.commit()
     conn.close()
 
-    return jsonify({"status": "success", "message": "User registered"})
+    return jsonify({"status": "success"})
 # ---------------- LOGIN ----------------
 @app.route("/login", methods=["GET","POST"])
 def login():
@@ -184,29 +165,18 @@ def login():
 
     return render_template("login.html")
 # ---------------- API FOR LOGIN ----------------
-@app.route("/api/login", methods=["GET","POST"])
+@app.route('/api/login', methods=['POST'])
 def api_login():
+    data = request.get_json()
 
-    # ✅ If GET → take from URL
-    if request.method == "GET":
-        email = request.args.get("email")
-        password = request.args.get("password")
-
-    # ✅ If POST → take JSON
-    else:
-        data = request.get_json(silent=True) or {}
-        email = data.get("email")
-        password = data.get("password")
-
-    # ❗ check missing input
-    if not email or not password:
-        return jsonify({"status": "error", "message": "Email & Password required"})
+    email = data.get("email")
+    password = data.get("password")
 
     conn = sqlite3.connect("farmer.db")
     cur = conn.cursor()
 
     cur.execute(
-        "SELECT name, role FROM users WHERE email=? AND password=?",
+        "SELECT * FROM users WHERE email=? AND password=?",
         (email, password)
     )
 
@@ -216,15 +186,14 @@ def api_login():
     if user:
         return jsonify({
             "status": "success",
-            "user": user[0],
-            "role": user[1]
+            "name": user[1],
+            "role": user[4]
         })
     else:
         return jsonify({
             "status": "error",
-            "message": "Invalid credentials"
+            "message": "Invalid login"
         })
-
 # ---------------- LOGOUT ----------------
 from flask import flash   # make sure this is imported
 
@@ -320,6 +289,63 @@ def market():
     conn.close()
 
     return render_template("market.html", crops=crops)
+#-------------------uploads route----------------
+from flask import send_from_directory
+@app.route('/static/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory('static/uploads', filename)
+#---------------- API FOR MARKET ----------------
+@app.route('/api/market', methods=['POST'])
+def api_market():
+    from flask import request, jsonify, url_for
+    import sqlite3
+
+    data = request.get_json(silent=True) or {}
+
+    role = data.get("role", "customer")
+    username = data.get("username", "")
+
+    conn = sqlite3.connect("farmer.db")
+    cur = conn.cursor()
+
+    # ✅ ROLE BASED DATA
+    if role == "farmer":
+        cur.execute("""
+            SELECT id, name, price, quantity, image, farmer, phone, location
+            FROM crops
+            WHERE farmer=?
+        """, (username,))
+    else:
+        cur.execute("""
+            SELECT id, name, price, quantity, image, farmer, phone, location
+            FROM crops
+        """)
+
+    rows = cur.fetchall()
+    conn.close()
+
+    crops = []
+
+    for row in rows:
+        image_file = row[4]
+
+        if image_file:
+            image_url = f"http://10.0.2.2:5000/static/uploads/{image_file}"
+        else:
+            image_url = ""
+
+        crops.append({
+            "id": row[0],
+            "name": row[1],
+            "price": row[2],
+            "quantity": row[3],
+            "image": image_url,
+            "farmer": row[5],
+            "phone": row[6],
+            "location": row[7],
+        })
+
+    return jsonify({"crops": crops})
 # ---------------- BUY ----------------
 
 @app.route("/buy/<int:id>", methods=["POST"])
@@ -408,7 +434,93 @@ def buy(id):
 
     return redirect("/orders")
 
+# ---------------- API FOR BUY ----------------
 
+@app.route("/api/buy", methods=["POST"])
+def api_buy():
+    data = request.get_json(silent=True) or {}
+
+    crop_id = data.get("id")
+    qty = int(data.get("qty", 0))
+    user = data.get("user")
+
+    if not crop_id or not qty or not user:
+        return jsonify({"status": "error", "message": "Missing data"})
+
+    conn = sqlite3.connect("farmer.db")
+    cur = conn.cursor()
+
+    cur.execute("SELECT name,price,quantity,image,farmer FROM crops WHERE id=?", (crop_id,))
+    crop = cur.fetchone()
+
+    if not crop:
+        return jsonify({"status": "error", "message": "Crop not found"})
+
+    name, price, available, image, farmer = crop
+
+    if available < qty:
+        return jsonify({"status": "error", "message": "Not enough stock"})
+
+    cur.execute("UPDATE crops SET quantity=? WHERE id=?", (available - qty, crop_id))
+
+    cur.execute("""
+        SELECT quantity FROM orders 
+        WHERE user=? AND crop=? AND farmer=? AND status='cart'
+    """, (user, name, farmer))
+
+    existing = cur.fetchone()
+
+    if existing:
+        new_qty = existing[0] + qty
+        cur.execute("""
+            UPDATE orders SET quantity=? 
+            WHERE user=? AND crop=? AND farmer=? AND status='cart'
+        """, (new_qty, user, name, farmer))
+    else:
+        cur.execute("""
+            INSERT INTO orders(user,crop,price,image,quantity,payment,farmer,status,order_status)
+            VALUES(?,?,?,?,?,?,?,?,?)
+        """, (user, name, price, image, qty, "Cash on Delivery", farmer, "cart", "Pending"))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({"status": "success", "message": "Added to cart ✅"})
+
+
+from flask import request, jsonify
+# ---------------- API FOR GET CART ----------------
+
+@app.route("/api/cart", methods=["POST"])
+def get_cart():
+    data = request.get_json()
+    user = data.get("user")
+
+    conn = sqlite3.connect("farmer.db")
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id, crop, price, quantity, image, farmer 
+        FROM orders 
+        WHERE user=? AND status='cart'
+    """, (user,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    cart = []
+
+    for r in rows:
+        cart.append({
+            "id": r[0],
+            "crop": r[1],   # ✅ FORCE SAME KEY
+            "price": float(r[2]),
+            "quantity": float(r[3]),
+            "image": r[4] if r[4] else "",
+            "farmer": r[5],
+        })
+
+    return jsonify({"cart": cart})
 # ---------------- ORDERS ----------------
 @app.route("/orders")
 def orders():
@@ -696,6 +808,34 @@ def update(id):
     conn.close()
 
     return render_template("update_crop.html", crop=crop)
+# ---------------- API FOR UPDATE ----------------
+@app.route('/api/update_crop', methods=['POST'])
+def api_update_crop():
+    data = request.json
+
+    crop_id = data.get("crop_id")
+    user = data.get("user")
+    name = data.get("name")
+    price = data.get("price")
+    quantity = data.get("quantity")
+
+    conn = sqlite3.connect("farmer.db")
+    cur = conn.cursor()
+
+    cur.execute("SELECT farmer FROM crops WHERE id=?", (crop_id,))
+    owner = cur.fetchone()
+
+    if owner and owner[0] == user:
+        cur.execute(
+            "UPDATE crops SET name=?, price=?, quantity=? WHERE id=?",
+            (name, price, quantity, crop_id)
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({"status": "success"})
+    else:
+        conn.close()
+        return jsonify({"status": "error", "message": "Not allowed"})
 # ---------------- DELETE ----------------
 @app.route("/delete/<int:id>")
 def delete(id):
@@ -718,6 +858,28 @@ def delete(id):
     conn.close()
 
     return redirect("/market")
+# ---------------- API FOR DELETE ----------------
+@app.route('/api/delete_crop', methods=['POST'])
+def api_delete_crop():
+    data = request.json
+
+    crop_id = data.get("crop_id")
+    user = data.get("user")
+
+    conn = sqlite3.connect("farmer.db")
+    cur = conn.cursor()
+
+    cur.execute("SELECT farmer FROM crops WHERE id=?", (crop_id,))
+    owner = cur.fetchone()
+
+    if owner and owner[0] == user:
+        cur.execute("DELETE FROM crops WHERE id=?", (crop_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({"status": "success"})
+    else:
+        conn.close()
+        return jsonify({"status": "error", "message": "Not allowed"})
 # ---------------- CANCEL ORDER ----------------
 @app.route("/cancel_order/<crop>")
 def cancel_order(crop):
@@ -766,8 +928,10 @@ def home():
 @app.route("/api/test")
 def test_api():
     return jsonify({"message": "API working"})
+
+
 # ---------------- RUN ----------------
 import os
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5000)   

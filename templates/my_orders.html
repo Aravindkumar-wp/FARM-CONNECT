@@ -111,24 +111,13 @@
 
             <!-- ✅ PROGRESS BAR (FIXED INSIDE CARD) -->
             <div style="height:6px; background:#ddd; border-radius:10px; margin-top:10px;">
-
-                <div style="
-                    height:6px;
-                    border-radius:10px;
-                    background:
-                    {% if status == 'Pending' %} red
-                    {% elif status == 'Processing' %} orange
-                    {% else %} green
-                    {% endif %};
-                    
-                    width:
-                    {% if status == 'Pending' %} 33%
-                    {% elif status == 'Processing' %} 66%
-                    {% else %} 100%
-                    {% endif %};
-                ">
-                </div>
-
+                {% if status == 'Pending' %}
+                <div style="height:6px; border-radius:10px; background:red; width:33%;"></div>
+                {% elif status == 'Processing' %}
+                <div style="height:6px; border-radius:10px; background:orange; width:66%;"></div>
+                {% else %}
+                <div style="height:6px; border-radius:10px; background:green; width:100%;"></div>
+                {% endif %}
             </div>
 
             <p>
