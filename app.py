@@ -610,6 +610,39 @@ def api_orders():
         })
 
     return jsonify({"orders": result})
+
+#---------------- api  MY ORDERS ----------------
+@app.route("/api/my_orders", methods=["POST"])
+def api_my_orders():
+    data = request.get_json()
+    user = data.get("user")
+
+    conn = sqlite3.connect("farmer.db")
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT crop, price, quantity, payment, phone, location, order_status
+        FROM orders
+        WHERE user=? AND status='placed'
+    """, (user,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    orders = []
+
+    for r in rows:
+        orders.append({
+            "crop": r[0],
+            "price": r[1],
+            "quantity": r[2],
+            "payment": r[3],
+            "phone": r[4],
+            "location": r[5],
+            "status": r[6]
+        })
+
+    return jsonify({"orders": orders})
 #----------------- MY ORDERS (FARMER) ----------------
 @app.route("/my_orders")
 def my_orders():
