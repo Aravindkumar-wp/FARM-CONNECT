@@ -166,7 +166,7 @@ def login():
     return render_template("login.html")
 
 # ---------------- LOGIN API ----------------
-@app.route("/api/login", methods=["POST"])
+@app.route("/api/login", methods=["GET", "POST"])
 def api_login():
 
     data = request.get_json(silent=True)
