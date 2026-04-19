@@ -633,15 +633,14 @@ def api_my_orders():
 
     for r in rows:
         orders.append({
-            "image": r[0],
-
-            "crop": r[1],
-            "price": r[2],
-            "quantity": r[3],
-            "payment": r[4],
-            "phone": r[5],
-            "location": r[6],
-            "status": r[7]
+            "crop": r[0],        # ✅ FIXED
+            "price": r[1],
+            "quantity": r[2],
+            "payment": r[3],
+            "phone": r[4],
+            "location": r[5],
+            "status": r[6],      # ✅ FIXED
+            "image": r[7]        # ✅ FIXED
         })
 
     return jsonify({"orders": orders})
