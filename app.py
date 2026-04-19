@@ -565,11 +565,14 @@ def orders():
     return render_template("orders.html", orders=order_list, total=total)
 
 # ---------------- API FOR ORDERS ----------------
-@app.route("/api/orders")
+@app.route("/api/orders", methods=["POST"])
 def api_orders():
 
-    if "user" not in session:
-        return jsonify({"error": "Not logged in"})
+    data = request.get_json()
+    user = data.get("user")
+
+    if not user:
+        return jsonify({"error": "User required"})
 
     conn = sqlite3.connect("farmer.db")
     cur = conn.cursor()
@@ -577,15 +580,15 @@ def api_orders():
     cur.execute("""
         SELECT crop, price, quantity, payment, phone, location, order_status
         FROM orders
-        WHERE user=? AND status='cart'
-    """, (session["user"],))
+        WHERE user=? AND status='placed'
+    """, (user,))
 
-    orders = cur.fetchall()
+    rows = cur.fetchall()
     conn.close()
 
     result = []
 
-    for o in orders:
+    for o in rows:
         result.append({
             "crop": o[0],
             "price": o[1],
@@ -596,7 +599,7 @@ def api_orders():
             "status": o[6]
         })
 
-    return jsonify(result)
+    return jsonify({"orders": result})
 #----------------- MY ORDERS (FARMER) ----------------
 @app.route("/my_orders")
 def my_orders():
