@@ -819,7 +819,7 @@ def api_place_order():
         "status": "success",
         "message": "Order placed successfully ✅"
     })
-#farmers orders
+#--------------farmers orders----------------
 @app.route("/farmer_orders")
 def farmer_orders():
 
@@ -845,6 +845,36 @@ def farmer_orders():
     # ✅ ONLY SHOW PAGE (NO FLASH, NO REDIRECT)
     return render_template("farmer_orders.html", orders=orders)
 
+# ---------------- API FOR UPDATE ORDER STATUS ----------------
+@app.route("/api/update_order_status", methods=["POST"])
+def update_order_status():
+    data = request.get_json()
+
+    order_id = data.get("order_id")
+    status = data.get("status")
+
+    if not order_id or not status:
+        return jsonify({
+            "status": "error",
+            "message": "Missing data"
+        })
+
+    conn = sqlite3.connect("farmer.db")
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE orders
+        SET order_status=?
+        WHERE id=?
+    """, (status, order_id))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "status": "success",
+        "message": "Order status updated ✅"
+    })
 
 # ---------------- UPDATE ----------------
 @app.route("/update/<int:id>", methods=["GET","POST"])
