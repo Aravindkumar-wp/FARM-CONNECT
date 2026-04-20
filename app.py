@@ -264,8 +264,6 @@ def api_add_crop():
     price = request.form.get("price")
     quantity = request.form.get("quantity")
     farmer = request.form.get("farmer")
-    phone = request.form.get("phone")
-    location = request.form.get("location")
 
     image_file = request.files.get("image")
 
@@ -278,6 +276,13 @@ def api_add_crop():
 
     conn = sqlite3.connect("farmer.db")
     cur = conn.cursor()
+
+    # 🔥 SAME LOGIC AS WEB (AUTO FETCH USER DETAILS)
+    cur.execute("SELECT phone, location FROM users WHERE name=?", (farmer,))
+    user_data = cur.fetchone()
+
+    phone = user_data[0] if user_data else ""
+    location = user_data[1] if user_data else ""
 
     cur.execute("""
         INSERT INTO crops (name, price, quantity, farmer, phone, location, image)
