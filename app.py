@@ -257,6 +257,40 @@ def add_crop():
 
     return render_template("add_crop.html")
 
+# ---------------- API FOR ADD CROP ----------------
+@app.route("/api/add_crop", methods=["POST"])
+def api_add_crop():
+    data = request.get_json()
+
+    name = data.get("name")
+    price = data.get("price")
+    quantity = data.get("quantity")
+    farmer = data.get("farmer")
+    phone = data.get("phone")
+    location = data.get("location")
+    image = data.get("image")  # just filename
+
+    if not name or not price or not quantity:
+        return jsonify({
+            "status": "error",
+            "message": "Missing fields"
+        })
+
+    conn = sqlite3.connect("farmer.db")
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO crops (name, price, quantity, farmer, phone, location, image)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (name, price, quantity, farmer, phone, location, image))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "status": "success",
+        "message": "Crop added successfully 🌾"
+    })
 # ---------------- MARKET ----------------
 @app.route("/market")
 def market():
