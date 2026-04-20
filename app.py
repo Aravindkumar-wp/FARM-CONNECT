@@ -260,21 +260,21 @@ def add_crop():
 # ---------------- API FOR ADD CROP ----------------
 @app.route("/api/add_crop", methods=["POST"])
 def api_add_crop():
-    data = request.get_json()
+    name = request.form.get("name")
+    price = request.form.get("price")
+    quantity = request.form.get("quantity")
+    farmer = request.form.get("farmer")
+    phone = request.form.get("phone")
+    location = request.form.get("location")
 
-    name = data.get("name")
-    price = data.get("price")
-    quantity = data.get("quantity")
-    farmer = data.get("farmer")
-    phone = data.get("phone")
-    location = data.get("location")
-    image = data.get("image")  # just filename
+    image_file = request.files.get("image")
 
-    if not name or not price or not quantity:
-        return jsonify({
-            "status": "error",
-            "message": "Missing fields"
-        })
+    filename = ""
+
+    if image_file:
+        filename = image_file.filename
+        image_path = os.path.join("static/uploads", filename)
+        image_file.save(image_path)
 
     conn = sqlite3.connect("farmer.db")
     cur = conn.cursor()
@@ -282,7 +282,7 @@ def api_add_crop():
     cur.execute("""
         INSERT INTO crops (name, price, quantity, farmer, phone, location, image)
         VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (name, price, quantity, farmer, phone, location, image))
+    """, (name, price, quantity, farmer, phone, location, filename))
 
     conn.commit()
     conn.close()
