@@ -909,10 +909,16 @@ def api_place_order():
     conn = sqlite3.connect("farmer.db")
     cur = conn.cursor()
 
-    # 🔁 move cart → placed + set initial status
+    # 🔁 move cart → placed + set farmer + status
     cur.execute("""
         UPDATE orders
-        SET status='placed', order_status='Pending'
+        SET 
+            status='placed',
+            order_status='Pending',
+            farmer = (
+                SELECT farmer FROM crops 
+                WHERE crops.name = orders.crop
+            )
         WHERE user=? AND status='cart'
     """, (user,))
 
