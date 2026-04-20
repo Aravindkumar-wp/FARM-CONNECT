@@ -973,28 +973,42 @@ def delete(id):
     conn.close()
 
     return redirect("/market")
-# ---------------- API FOR DELETE ----------------
-@app.route('/api/delete_crop', methods=['POST'])
-def api_delete_crop():
-    data = request.json
 
-    crop_id = data.get("crop_id")
-    user = data.get("user")
+# ---------------- API FOR DELETE CROP ----------------
+@app.route("/api/delete_crop", methods=["POST"])
+def api_delete_crop():
+    data = request.get_json()
+    crop_id = data.get("id")
+
+    if not crop_id:
+        return jsonify({
+            "status": "error",
+            "message": "Crop ID required"
+        })
 
     conn = sqlite3.connect("farmer.db")
     cur = conn.cursor()
 
-    cur.execute("SELECT farmer FROM crops WHERE id=?", (crop_id,))
-    owner = cur.fetchone()
+    # check if crop exists
+    cur.execute("SELECT * FROM crops WHERE id=?", (crop_id,))
+    crop = cur.fetchone()
 
-    if owner and owner[0] == user:
-        cur.execute("DELETE FROM crops WHERE id=?", (crop_id,))
-        conn.commit()
+    if not crop:
         conn.close()
-        return jsonify({"status": "success"})
-    else:
-        conn.close()
-        return jsonify({"status": "error", "message": "Not allowed"})
+        return jsonify({
+            "status": "error",
+            "message": "Crop not found"
+        })
+
+    # delete crop
+    cur.execute("DELETE FROM crops WHERE id=?", (crop_id,))
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "status": "success",
+        "message": "Crop deleted successfully 🗑"
+    })
 # ---------------- CANCEL ORDER ----------------
 @app.route("/cancel_order/<crop>")
 def cancel_order(crop):
