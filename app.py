@@ -783,6 +783,71 @@ except:
 conn.commit()
 conn.close()
 
+#---------------- API FOR DASHBOARD ----------------
+
+@app.route("/api/farmer_dashboard", methods=["POST"])
+def farmer_dashboard():
+    data = request.get_json()
+    farmer = data.get("farmer")
+
+    conn = sqlite3.connect("farmer.db")
+    cur = conn.cursor()
+
+    # total crops
+    cur.execute("SELECT COUNT(*) FROM crops WHERE farmer=?", (farmer,))
+    total_crops = cur.fetchone()[0]
+
+    # crop wise data (available)
+    cur.execute("""
+        SELECT name, quantity FROM crops WHERE farmer=?
+    """, (farmer,))
+    crops = cur.fetchall()
+
+    # sold + revenue
+    cur.execute("""
+        SELECT crop, SUM(quantity), SUM(price * quantity)
+        FROM orders
+        WHERE farmer=? AND status='placed'
+        GROUP BY crop
+    """, (farmer,))
+    orders = cur.fetchall()
+
+    # map for sold data
+    sold_map = {}
+    for o in orders:
+        sold_map[o[0]] = {
+            "sold": o[1],
+            "revenue": o[2]
+        }
+
+    crop_stats = []
+    total_revenue = 0
+
+    for c in crops:
+        name = c[0]
+        available = c[1]
+
+        sold = sold_map.get(name, {}).get("sold", 0)
+        revenue = sold_map.get(name, {}).get("revenue", 0)
+
+        total_revenue += revenue
+
+        crop_stats.append({
+            "crop": name,
+            "available": available,
+            "sold": sold,
+            "revenue": revenue
+        })
+
+    conn.close()
+
+    return jsonify({
+        "total_crops": total_crops,
+        "total_revenue": total_revenue,
+        "crop_stats": crop_stats
+    })
+
+#---------------- UPDATE ORDER STATUS ----------------
 @app.route("/update_status/<crop>/<status>")
 def update_status(crop, status):
 
