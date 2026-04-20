@@ -767,7 +767,7 @@ def update_status(crop, status):
     conn.close()
 
     return redirect("/farmer_orders")
-#placed orders
+#---------------place order----------------
 @app.route("/place_order", methods=["POST"])
 def place_order():
 
@@ -805,10 +805,10 @@ def api_place_order():
     conn = sqlite3.connect("farmer.db")
     cur = conn.cursor()
 
-    # 🔁 move cart → placed
+    # 🔁 move cart → placed + set initial status
     cur.execute("""
         UPDATE orders
-        SET status='placed'
+        SET status='placed', order_status='Pending'
         WHERE user=? AND status='cart'
     """, (user,))
 
