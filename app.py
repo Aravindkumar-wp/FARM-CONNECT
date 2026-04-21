@@ -715,6 +715,65 @@ def my_orders():
         order_list.append((crop, price, image, qty, subtotal, payment, phone, location, status))
 
     return render_template("my_orders.html", orders=order_list, total=total)
+
+# ---------------- API FOR FARMER ORDERS ----------------
+@app.route("/api/farmer_orders", methods=["POST"])
+def api_farmer_orders():
+    data = request.get_json()
+    farmer = data.get("farmer")
+
+    conn = sqlite3.connect("farmer.db")
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT user, crop, quantity, price, payment, image, phone, location, order_status
+        FROM orders
+        WHERE farmer=? AND status='placed'
+    """, (farmer,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    orders = []
+
+    for r in rows:
+        orders.append({
+            "user": r[0],
+            "crop": r[1],
+            "quantity": r[2],
+            "price": r[3],
+            "payment": r[4],
+            "image": r[5],
+            "phone": r[6],
+            "location": r[7],
+            "status": r[8]
+        })
+
+    return jsonify({"orders": orders})
+
+# ---------------- UPDATE ORDER STATUS ----------------
+@app.route("/api/update_status", methods=["POST"])
+def api_update_status():
+    data = request.get_json()
+    crop = data.get("crop")
+    status = data.get("status")
+
+    conn = sqlite3.connect("farmer.db")
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE orders
+        SET order_status=?
+        WHERE crop=? AND status='placed'
+    """, (status, crop))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "status": "success",
+        "message": "Status updated ✅"
+    })
 #---------dashboard----------
 @app.route("/dashboard")
 def dashboard():
