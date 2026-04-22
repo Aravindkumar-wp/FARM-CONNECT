@@ -342,10 +342,11 @@ from flask import send_from_directory
 @app.route('/static/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory('static/uploads', filename)
-#---------------- API FOR MARKET ----------------
+
+# ---------------- API FOR MARKET ----------------
 @app.route('/api/market', methods=['POST'])
 def api_market():
-    from flask import request, jsonify, url_for
+    from flask import request, jsonify
     import sqlite3
 
     data = request.get_json(silent=True) or {}
@@ -374,11 +375,15 @@ def api_market():
 
     crops = []
 
+    # 🔥 IMPORTANT: USE RENDER URL (NOT LOCALHOST)
+    BASE_URL = "https://farm-connect-zfb3.onrender.com"
+
     for row in rows:
         image_file = row[4]
 
-        if image_file:
-            image_url = f"http://10.0.2.2:5000/static/uploads/{image_file}"
+        # ✅ FIXED IMAGE URL
+        if image_file and image_file.strip() != "":
+            image_url = f"{BASE_URL}/static/uploads/{image_file}"
         else:
             image_url = ""
 
