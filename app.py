@@ -1092,34 +1092,60 @@ def update(id):
     conn.close()
 
     return render_template("update_crop.html", crop=crop)
-# ---------------- API FOR UPDATE ----------------
+
+#-------API for UPDATE CROP----------------
 @app.route('/api/update_crop', methods=['POST'])
 def api_update_crop():
-    data = request.json
+    try:
+        data = request.json
 
-    crop_id = data.get("crop_id")
-    user = data.get("user")
-    name = data.get("name")
-    price = data.get("price")
-    quantity = data.get("quantity")
+        crop_id = data.get("crop_id")
+        user = data.get("user")
+        name = data.get("name")
+        price = data.get("price")
+        quantity = data.get("quantity")
 
-    conn = sqlite3.connect("farmer.db")
-    cur = conn.cursor()
+        # 🔴 VALIDATION
+        if not crop_id or not user:
+            return jsonify({"status": "error", "message": "Missing data"})
 
-    cur.execute("SELECT farmer FROM crops WHERE id=?", (crop_id,))
-    owner = cur.fetchone()
+        if price is None or quantity is None:
+            return jsonify({"status": "error", "message": "Price & Quantity required"})
 
-    if owner and owner[0] == user:
+        if int(price) < 0 or int(quantity) < 0:
+            return jsonify({"status": "error", "message": "Invalid values"})
+
+        conn = sqlite3.connect("farmer.db")
+        cur = conn.cursor()
+
+        # 🔒 CHECK OWNER
+        cur.execute("SELECT farmer FROM crops WHERE id=?", (crop_id,))
+        owner = cur.fetchone()
+
+        if not owner:
+            conn.close()
+            return jsonify({"status": "error", "message": "Crop not found"})
+
+        if owner[0] != user:
+            conn.close()
+            return jsonify({"status": "error", "message": "Not allowed"})
+
+        # ✅ UPDATE
         cur.execute(
             "UPDATE crops SET name=?, price=?, quantity=? WHERE id=?",
             (name, price, quantity, crop_id)
         )
+
         conn.commit()
         conn.close()
+
         return jsonify({"status": "success"})
-    else:
-        conn.close()
-        return jsonify({"status": "error", "message": "Not allowed"})
+
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        })
 # ---------------- DELETE ----------------
 @app.route("/delete/<int:id>")
 def delete(id):
